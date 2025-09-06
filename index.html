@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Demo Pay</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: linear-gradient(180deg, #7dd47c, #baf2c4);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .topbar {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      display: flex;
+      align-items: center;
+    }
+    .logo {
+      background: white;
+      color: #1db954;
+      font-weight: bold;
+      font-size: 16px;
+      border-radius: 50%;
+      padding: 8px 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    .app {
+      background: white;
+      border-radius: 30px 30px 0 0;
+      margin-top: 80px;
+      width: 360px;
+      padding: 20px;
+      box-shadow: 0 -4px 12px rgba(0,0,0,0.1);
+    }
+    h3 {
+      margin: 0;
+      font-size: 18px;
+    }
+    .amount {
+      font-size: 28px;
+      font-weight: bold;
+      margin: 10px 0;
+    }
+    .change {
+      color: #1db954;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .account {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #eee;
+      border-radius: 12px;
+      margin: 15px 0;
+      cursor: pointer;
+    }
+    .account.active {
+      background: #e9f9ee;
+      border-color: #1db954;
+    }
+    .wallet {
+      font-size: 14px;
+      color: #666;
+    }
+    input {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 8px;
+      margin-bottom: 15px;
+      font-size: 14px;
+    }
+    button {
+      background: #1db954;
+      border: none;
+      border-radius: 12px;
+      color: white;
+      padding: 15px;
+      width: 100%;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:disabled {
+      background: gray;
+      cursor: not-allowed;
+    }
+    .cancel {
+      margin-top: 10px;
+      text-align: center;
+      color: #ff4a4a;
+      cursor: pointer;
+    }
+    .message {
+      margin-top: 15px;
+      color: #1db954;
+      font-weight: bold;
+      display: none;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="topbar">
+    <div class="logo">Pay</div>
+  </div>
+
+  <div class="app">
+    <h3>Магазин</h3>
+    <div class="amount">400 ₽</div>
+    <div class="change">Изменить</div>
+
+    <div id="accounts">
+      <div class="account active" onclick="selectAccount(this)">
+        <span>Платёжный счёт ··0000</span>
+        <span>100 000 ₽</span>
+      </div>
+      <div class="account" onclick="selectAccount(this)">
+        <span>Mastercard ··1111</span>
+        <span>10 000 ₽</span>
+      </div>
+      <div class="account" onclick="selectAccount(this)">
+        <span>Mastercard ··2222</span>
+        <span>20 000 ₽</span>
+      </div>
+    </div>
+
+    <label class="wallet">Назначение платежа</label>
+    <input type="text" placeholder="Необязательно">
+
+    <button onclick="confirmPayment()">Оплатить 400 ₽</button>
+    <div class="cancel">Отменить</div>
+    <div class="message"></div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-database.js";
+
+    const firebaseConfig = {
+    apiKey: "AIzaSyBOKqaUE5Zi_ZSL7eSYyby_AjA603SOzQk",
+    authDomain: "sber-emu.firebaseapp.com",
+    databaseURL: "https://sber-emu-default-rtdb.firebaseio.com",
+    projectId: "sber-emu",
+    storageBucket: "sber-emu.firebasestorage.app",
+    messagingSenderId: "704050354843",
+    appId: "1:704050354843:web:9aec7c849444deb092843e",
+    measurementId: "G-GVXLTS6SL3"
+  };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    window.selectAccount = function(el) {
+      document.querySelectorAll(".account").forEach(a => a.classList.remove("active"));
+      el.classList.add("active");
+    }
+
+    window.confirmPayment = async function() {
+      const account = document.querySelector(".account.active span").textContent;
+      const paymentId = "demo_" + Date.now();
+
+      try {
+        await set(ref(db, "payments/" + paymentId), {
+          status: "confirmed",
+          amount: 400,
+          currency: "RUB",
+          account: account,
+          time: new Date().toISOString()
+        });
+
+        document.querySelector(".message").textContent = "Оплата подтверждена!";
+        document.querySelector(".message").style.display = "block";
+        document.querySelector("button").disabled = true;
+      } catch (err) {
+        alert("Ошибка Firebase: " + err.message);
+      }
+    };
+  </script>
+</body>
+</html>
